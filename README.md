@@ -9,13 +9,13 @@ CustomStruct is (as far as pure python allow) optimized, using 'pre-compiled' St
 
 ### Why didn't you used Google's "Protocol Buffers"
 
-I developed this module instead of using 'Protocol Buffers' because I wanted a pure python implementation, with no external definition files, simple and intuitive syntax, direct and faster way to declare my protocol.
+I developed this module instead of using **Protocol Buffers** because I wanted a pure python implementation, with no external definition files, simple and intuitive syntax, direct and faster way to declare my protocol.
 
 No compile, recompile definition file stuff. You define the protocol in code, then you can throw dicts and objects in and out. Simple as that.
 
-Also, I found it to be faster than **Protocol Buffers**! But I didn't test too much. So I preffer to say it is 'as fast as'. Maybe.
+Also, I found it to be faster than **Protocol Buffers**! But I didn't test too much. So I preffer to say it is "as fast as". Maybe.
 
-But this module is **not** a alternative to **Protocol Buffers** if your aiming for Google's cross-language support or formal protocol specification that a large project require.
+But this module is not a alternative to **Protocol Buffers** if your aiming for Google's cross-language support or formal protocol specification that a large project require.
 
 
 ## Just show me how it works
