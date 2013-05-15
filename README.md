@@ -1,15 +1,19 @@
 CustomStruct
 ============
 
-Simple pure python module for packing and unpacking of structured data with no ovearhead. It serves as base of a network protocol for a game I'm developing.
+Simple pure python module for serialization of structured data with no ovearhead. It serves as base of the network protocol for a game im developing.
 
 Nothing BIG. It's just a smart way I found to bend the native 'struct' module to my needs. By using this module one avoid the boring and repetitive task of manually defining it's own custom data pack and unpacking functions.
 
 CustomStruct is (as far as pure python allow) optimized, using 'pre-compiled' Structs and reducing function calls by flattening static structures when possible.
 
-### Why didn't you used Google's "Protocol Buffers"
+### Why didn't you use pickle
 
-I developed this module instead of using **Protocol Buffers** because I wanted a pure python implementation, with no external definition files, simple and intuitive syntax, direct and faster way to declare my protocol.
+The game requires low length packets while pickle do leave considerable overhead to specify objects types.
+
+### Why didn't you use Google's "Protocol Buffers"
+
+I developed this module instead of using **Protocol Buffers** because I wanted a pure python implementation, with no external definition files, simple and intuitive syntax, direct and fast way to declare my protocol.
 
 No compile, recompile definition file stuff. You define the protocol in code, then you can throw dicts and objects in and out. Simple as that.
 
