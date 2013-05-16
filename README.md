@@ -7,24 +7,24 @@ Nothing BIG. It's just a smart way I found to bend the native 'struct' module to
 
 CustomStruct is (as far as pure python allow) optimized, using 'pre-compiled' Structs and reducing function calls by flattening static structures when possible.
 
-### Why didn't you use pickle
+### Why didn't I use pickle
 
 The game requires low length packets while pickle do leave considerable overhead to specify objects types.
 
-### Why didn't you use Google's "Protocol Buffers"
+### Why didn't I use Google's "Protocol Buffers"
 
 I developed this module instead of using **Protocol Buffers** because I wanted a pure python implementation, with no external definition files, simple and intuitive syntax, direct and fast way to declare my protocol.
 
-No compile, recompile definition file stuff. You define the protocol in code, then you can throw dicts and objects in and out. Simple as that.
+No compile, recompile definition file stuff. You define the protocol in code, then you can throw dicts and objects in and out. Simple as that. Plus, I found it to be faster than **Protocol Buffers**! And it has less overhead!
 
-Also, I found it to be faster than **Protocol Buffers**! But I didn't test too much. So I preffer to say it is "as fast as". Maybe.
-
-But this module is not a alternative to **Protocol Buffers** if your aiming for Google's cross-language support or formal protocol specification that a large project require.
+But this module is NOT a alternative to **Protocol Buffers**. **Protocol Buffers** has cross-language support, cross-protocol-version support and a much more formal specification that fits much better for larger projects.
 
 
-## Just show me how it works
+## How it works
 
 ### Defining protocol
+
+Direct and simple.
 
     import CustomStruct as cs
     
@@ -44,6 +44,8 @@ But this module is not a alternative to **Protocol Buffers** if your aiming for 
 
 ### Test using dict
 
+The most simple way is to "serialize dicts".
+
     person = dict(
         name= 'John',
         birth= 1980,
@@ -57,7 +59,9 @@ But this module is not a alternative to **Protocol Buffers** if your aiming for 
     packed = cs.pack(PersonStruct, person)
     print packed, ' -> ', cs.unpack(packed)
 
-### But I preffer packing objects
+### Packing objects
+
+When packing object instances CustomStruct uses the object's (__dict__) to get the required fields.
 
     class Person:
         def __init__(self, name, birth, contacts, parents):
@@ -73,18 +77,61 @@ But this module is not a alternative to **Protocol Buffers** if your aiming for 
     
     person = Person('Eric', 1970, [ Contact(TYPE_EMAIL, 'luck@email.com') ], ('Mike', 'Sona'))
     
-    packed = cs.pack(PersonStruct, person) # it will use __dict__ of the object
+    packed = cs.pack(PersonStruct, person)
     print packed, ' -> ', cs.unpack(packed)
 
-### But I preffer unpacking objects
+### Unpacking objects
+
+CustomStruct needs you to define an auxiliary constructor in order to build objects.
 
     def aux_constructor(structure, data):
         if structure == PersonStruct:
             return Person(data['name'], data['birth'], data['contacts'], data['parents'])
-        if structure == ContactStruct:
+        elif structure == ContactStruct:
             return Contact(data['type'], data['data'])
+        else:
+            return data
     
     cs.set_constructor(aux_constructor) # dicts will be supplied to the constructor
+    
     packed = cs.pack(PersonStruct, person)
     print packed, ' -> ', cs.unpack(packed)
 
+
+## Built-in structures
+
+Here is the list of all built-ins structures on can use.
+
+    Byte     : unsigned, 1 byte
+    Short    : unsigned, 2 bytes
+    Int      : unsigned, 4 byte
+    
+    NegByte  : 1 byte
+    NegShort : 2 byte
+    NegInt   : 4 byte
+    
+    Float    : float, 4 bytes
+    Double   : float, 8 bytes
+    
+    String   : 255 max-variable length string, 1 byte + string length
+
+    List( structure* ) : 255 max-variable length list of structure*, 1 byte + content size
+                       : list can be used as optional field
+
+    Tuple( structure*, size* ) : size* fix length tuple of structure*, content size
+
+    LongString : 4294967295 max-variable length string, 4 bytes + string length
+             
+### Packing arbritrary sub-structure
+
+    SerializedStruct = cs.Structure(
+        serial= cs.Int,
+        data=   cs.LongString
+    )
+    
+    serialized = { 'serial': 100, 'data': cs.pack(PersonStruct, person) }
+    
+    packed = cs.pack(SerializedStruct, serialized)
+    unpacked = cs.unpack(packed)
+    unpacked['data'] = cs.unpack(unpacked['data'])
+    print packed, ' -> ', cs.unpack(packed)
