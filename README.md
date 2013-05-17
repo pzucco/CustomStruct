@@ -26,8 +26,6 @@ But this module is NOT a alternative to **Protocol Buffers**. **Protocol Buffers
 
 Direct and simple.
 
-    import CustomStruct as cs
-    
     ContactStruct = cs.Structure(
         type= cs.Byte,
         data= cs.String,
@@ -37,14 +35,13 @@ Direct and simple.
         name=     cs.String,
         birth=    cs.Short,
         contacts= cs.List(ContactStruct),
-        parents=  cs.Tuple(cs.String, 2),
     )
-
+    
     TYPE_EMAIL, TYPE_PHONE = 0, 1
 
-### Test using dict
+### Dict serialization
 
-The most simple way is to "serialize dicts".
+The simplest way to serialize data is to use dict.
 
     person = dict(
         name= 'John',
@@ -53,85 +50,100 @@ The most simple way is to "serialize dicts".
             dict(type= TYPE_EMAIL, data= 'john@email.com'),
             dict(type= TYPE_PHONE, data= '12345678'),
         ],
-        parents= ('Smith', 'Lola')
     )
     
-    packed = cs.pack(PersonStruct, person)
-    print packed, ' -> ', cs.unpack(packed)
+    serialized = cs.serialize(PersonStruct, person)
+    print 'serialized  : "%s"' % serialized.replace('\r', '')
+    print 'deserialized: %s' % cs.deserialize(serialized)
 
-### Packing objects
+### Serializing objects
 
-When packing object instances CustomStruct uses the object's (__dict__) to get the required fields.
+When serializing object instances CustomStruct uses the object's (__dict__) to get the required fields.
 
     class Person:
-        def __init__(self, name, birth, contacts, parents):
+        def __init__(self, name, birth, contacts):
             self.name = name
             self.birth = birth
             self.contacts = contacts
-            self.parents = parents
     
     class Contact:
         def __init__(self, type, data):
             self.type = type
             self.data = data
     
-    person = Person('Eric', 1970, [ Contact(TYPE_EMAIL, 'luck@email.com') ], ('Mike', 'Sona'))
+    person = Person('John', 1980, [Contact(TYPE_EMAIL, 'john@email.com'), Contact(TYPE_PHONE, '12345678')])
     
-    packed = cs.pack(PersonStruct, person)
-    print packed, ' -> ', cs.unpack(packed)
+    serialized = cs.serialize(PersonStruct, person)
+    print 'serialized  : "%s"' % serialized.replace('\r', '')
+    print 'deserialized: %s' % cs.deserialize(serialized)
 
-### Unpacking objects
+### Deserializing objects
 
-CustomStruct needs you to define an auxiliary constructor in order to build objects.
+CustomStruct requires you to define an auxiliary constructor in order to build objects.
 
     def aux_constructor(structure, data):
         if structure == PersonStruct:
-            return Person(data['name'], data['birth'], data['contacts'], data['parents'])
+            return Person(data['name'], data['birth'], data['contacts'])
         elif structure == ContactStruct:
             return Contact(data['type'], data['data'])
         else:
             return data
     
-    cs.set_constructor(aux_constructor) # dicts will be supplied to the constructor
+    cs.set_constructor(aux_constructor)
     
-    packed = cs.pack(PersonStruct, person)
-    print packed, ' -> ', cs.unpack(packed)
+    print 'deserialized: %s' % cs.deserialize(serialized)
 
 
-## Built-in structures
+## Reference
 
-Here is the list of all built-ins structures on can use.
+Functions:
+
+    CustomStruct.Structure( **field=structure, ... )
+    CustomStruct.serialize( structure, data )
+    CustomStruct.deserialize( raw_data )
+    CustomStruct.set_constructor( constructor )
+
+List of built-ins structures:
 
     Byte     : unsigned, 1 byte
     Short    : unsigned, 2 bytes
     Int      : unsigned, 4 byte
     
-    NegByte  : 1 byte
-    NegShort : 2 byte
-    NegInt   : 4 byte
+    SigByte  : 1 byte
+    SigShort : 2 byte
+    SigInt   : 4 byte
     
     Float    : float, 4 bytes
     Double   : float, 8 bytes
     
     String   : 255 max-variable length string, 1 byte + string length
 
-    List( structure* ) : 255 max-variable length list of structure*, 1 byte + content size
-                       : list can be used as optional field
+    List( structure ) : 255 max-variable length list of structure*, 1 byte + content size
+                      : list can be used as optional field
 
-    Tuple( structure*, size* ) : size* fix length tuple of structure*, content size
+    Tuple( structure, size ) : size* fix length tuple of structure*, content size
 
-    LongString : 4294967295 max-variable length string, 4 bytes + string length
+    RawData : 4294967295 max-variable length raw data, 4 bytes + content size
              
-### Packing arbritrary sub-structure
+### How to serialize arbritrary data (like dynamic structures)
 
-    SerializedStruct = cs.Structure(
-        serial= cs.Int,
-        data=   cs.LongString
+    ArchiveStruct = cs.Structure(
+        date=    cs.Tuple(cs.Byte, 3),
+        content= cs.RawData
     )
+        
+    def aux_constructor(structure, data):
+        if structure == ArchiveStruct:
+            data['content'] = cs.deserialize(data['content'])
+        return data
     
-    serialized = { 'serial': 100, 'data': cs.pack(PersonStruct, person) }
+    cs.set_constructor(aux_constructor)
     
-    packed = cs.pack(SerializedStruct, serialized)
-    unpacked = cs.unpack(packed)
-    unpacked['data'] = cs.unpack(unpacked['data'])
-    print packed, ' -> ', cs.unpack(packed)
+    archive = {
+        'date'   : (17, 05, 13),
+        'content': cs.serialize(PersonStruct, person)
+    }
+    
+    serialized = cs.serialize(ArchiveStruct, archive)
+    print 'serialized  : "%s"' % serialized.replace('\r', '')
+    print 'deserialized: %s' % cs.deserialize(serialized)
