@@ -5,13 +5,13 @@ import struct
 _code = 0
 _byte_struct = struct.Struct('!B')
 _int_struct = struct.Struct('!I')
-_unpack = {}
+_structure = {}
 
 class Base(object):
     def __init__(self):
         global _code
-        self._code = _byte_struct.pack(_code)
-        _unpack[_code] = self
+        self.code = _byte_struct.pack(_code)
+        _structure[_code] = self
         _code += 1
 
 class Atom(Base):
@@ -86,7 +86,8 @@ def _string_write(data):
     return raw + struct.pack('!%is' % len(data), data)
 def _string_read(raw, offset):
     length = _byte_struct.unpack_from(raw, offset)[0]
-    return struct.unpack_from('!%is' % length, raw, offset + 1)[0], offset + length + 1
+    offset += 1
+    return struct.unpack_from('!%is' % length, raw, offset)[0], offset + length
 
 String = Base()
 String.write = _string_write
@@ -98,7 +99,8 @@ def _raw_data_write(data):
     return raw + data
 def _raw_data_read(raw, offset):
     length = _int_struct.unpack_from(raw, offset)[0]
-    return raw[offset+4:offset+4+length], offset + length + 4
+    offset += 4
+    return raw[offset:offset+length], offset + length
 
 RawData = Base()
 RawData.write = _raw_data_write
@@ -144,8 +146,8 @@ def set_constructor(constructor):
 
 def deserialize(raw):
     code = _byte_struct.unpack_from(raw)[0]
-    data, _ = _unpack[code].read(raw, 1)
-    return data
+    data, _ = _structure[code].read(raw, 1)
+    return _structure[code], data
 
 def serialize(structure, data):
-    return structure._code + structure.write(data)
+    return structure.code + structure.write(data)

@@ -26,8 +26,10 @@ person = dict(
 )
 
 serialized = cs.serialize(PersonStruct, person)
-print 'serialized  : "%s"' % serialized.replace('\r', '')
-print 'deserialized: %s' % cs.deserialize(serialized)
+structure, data = cs.deserialize(serialized)
+print data
+print 'received data is a PersonStruct?', structure == PersonStruct
+
 
 class Person:
     def __init__(self, name, birth, contacts):
@@ -41,10 +43,8 @@ class Contact:
         self.data = data
 
 person = Person('John', 1980, [Contact(TYPE_EMAIL, 'john@email.com'), Contact(TYPE_PHONE, '12345678')])
-
 serialized = cs.serialize(PersonStruct, person)
-print 'serialized  : "%s"' % serialized.replace('\r', '')
-print 'deserialized: %s' % cs.deserialize(serialized)
+print cs.deserialize(serialized)[1]
 
 
 def aux_constructor(structure, data):
@@ -57,7 +57,7 @@ def aux_constructor(structure, data):
 
 cs.set_constructor(aux_constructor)
 
-print 'deserialized: %s' % cs.deserialize(serialized)
+print cs.deserialize(serialized)[1]
 
 
 ArchiveStruct = cs.Structure(
@@ -78,5 +78,4 @@ def aux_constructor(structure, data):
 cs.set_constructor(aux_constructor)
 
 serialized = cs.serialize(ArchiveStruct, archive)
-print 'serialized  : "%s"' % serialized.replace('\r', '')
-print 'deserialized: %s' % cs.deserialize(serialized)
+print 'deserialized: %s' % cs.deserialize(serialized)[1]
