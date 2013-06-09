@@ -26,6 +26,8 @@ But this module is NOT a alternative to **Protocol Buffers**. **Protocol Buffers
 
 Direct and simple.
 
+    import CustomStruct as cs
+
     ContactStruct = cs.Structure(
         type= cs.Byte,
         data= cs.String,
